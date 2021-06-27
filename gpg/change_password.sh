@@ -47,6 +47,7 @@ if [ "${gpg_password1}" != "${gpg_password2}" ]; then
   exit 1
 fi
 
+# TODO needs to fail if some files cannot be decrypted, or just change passwords of files that could
 "${script_dir}/decrypt.sh" "${source}" "${source}_old" "${gpg_password_old}"
 mv "${source}" "${source}_bak"
 "${script_dir}/encrypt.sh" "${source}_old" "${source}" "${gpg_password1}"
