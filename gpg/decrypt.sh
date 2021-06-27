@@ -36,33 +36,39 @@ source="${1}"
 source="$(realpath "${source}")"
 target="${2}"
 target="$(realpath "${target}")"
-set +u
-gpg_password1="${3}"
-set -u
 if [ -d "${target}" ]; then
   echo ""
   read -p "TARGET [${target}] EXISTS"
   exit 1
 fi
 
-if [ "${gpg_password1}" = "" ]; then  
-  read -s -p "enter password: " gpg_password1
+set +u
+gpg_password="${3}"
+set -u
+if [ "${gpg_password}" = "" ]; then
   echo ""
-  read -s -p "repeat password: " gpg_password2
-  if [ "${gpg_password1}" != "${gpg_password2}" ]; then
-    echo ""
-    read -p "PASSWORDS DO NOT MATCH!"
-    exit 1
-  fi
-fi 
+  read -s -p "enter password: " gpg_password
+fi
 
 function do_file(){
   local file
   file="${1}"
-  local target
-  target="${2}"
-  mkdir -p "${target}"
-  echo "${gpg_password1}" | gpg --batch --yes --passphrase-fd 0 --output "${target}/$(basename "${file}").gpg" -c "${file}"
+  if [[ "${file}" =~ .+\.gpg$ ]]; then
+    local target
+    target="${2}"
+    mkdir -p "${target}"
+    local base_name
+    base_name="$(basename "${file}")"
+    base_name="$(echo "${base_name}" | sed -e 's/\.[^.]*$//')"
+    local res
+    #echo "${gpg_password}" | gpg -d --batch --yes --passphrase-fd 0 --output "${target}/${base_name}" "${file}"
+    res="0"
+    echo "${gpg_password}" | gpg --batch --yes --passphrase-fd 0 --output "${target}/${base_name}" "${file}" || res="1"
+    echo $res
+    if [ "${res}" = "1" ]; then
+      cp "${file}" "${target}/$(basename "${file}")"
+    fi
+  fi
 }
 
 function do_dir(){

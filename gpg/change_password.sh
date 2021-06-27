@@ -34,56 +34,24 @@ set -eu
 
 source="${1}"
 source="$(realpath "${source}")"
-target="${2}"
-target="$(realpath "${target}")"
-set +u
-gpg_password1="${3}"
-set -u
-if [ -d "${target}" ]; then
-  echo ""
-  read -p "TARGET [${target}] EXISTS"
+
+echo ""
+read -s -p "enter old password: " gpg_password_old
+echo ""
+read -s -p "enter new password: " gpg_password1
+echo ""
+read -s -p "repeat new password: " gpg_password2
+
+if [ "${gpg_password1}" != "${gpg_password2}" ]; then
+  read -p "PASSWORDS DO NOT MATCH!"
   exit 1
 fi
 
-if [ "${gpg_password1}" = "" ]; then  
-  read -s -p "enter password: " gpg_password1
-  echo ""
-  read -s -p "repeat password: " gpg_password2
-  if [ "${gpg_password1}" != "${gpg_password2}" ]; then
-    echo ""
-    read -p "PASSWORDS DO NOT MATCH!"
-    exit 1
-  fi
-fi 
-
-function do_file(){
-  local file
-  file="${1}"
-  local target
-  target="${2}"
-  mkdir -p "${target}"
-  echo "${gpg_password1}" | gpg --batch --yes --passphrase-fd 0 --output "${target}/$(basename "${file}").gpg" -c "${file}"
-}
-
-function do_dir(){
-  local dir
-  dir="${1}"
-  local target
-  target="${2}"
-  for filename in "${dir}/"*; do
-    if [ -f "${filename}" ]; then
-      do_file "${filename}" "${target}"
-    elif [ -d "${filename}" ]; then
-      do_dir "${filename}" "${target}/$(basename "${filename}")"
-    fi
-  done
-}
-
-if [ -f "${source}" ]; then
-  do_file "${source}" "${target}"
-elif [ -d "${source}" ]; then
-  do_dir "${source}" "${target}"
-fi
+"${script_dir}/decrypt.sh" "${source}" "${source}_old" "${gpg_password_old}"
+mv "${source}" "${source}_bak"
+"${script_dir}/encrypt.sh" "${source}_old" "${source}" "${gpg_password1}"
+rm -rf "${source}_old"
+rm -rf "${source}_bak"
 
 ##################################SCRIPT_END###################################
 # Restore old shell values
