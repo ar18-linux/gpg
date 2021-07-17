@@ -180,6 +180,7 @@ trap 'err_report "${BASH_SOURCE[0]}" ${LINENO} "${BASH_COMMAND}"' ERR
 }
 #################################SCRIPT_START##################################
 
+echo "Usage: encrypt <source> <target_dir> [password]"
 source="${1}"
 source="$(realpath "${source}")"
 target="${2}"
@@ -187,10 +188,8 @@ target="$(realpath "${target}")"
 set +u
 gpg_password1="${3}"
 set -u
-if [ -d "${target}" ]; then
-  echo ""
-  read -p "TARGET [${target}] EXISTS"
-  exit 1
+if [ ! -d "${target}" ]; then
+  mkdir -p "${target}"
 fi
 
 if [ "${gpg_password1}" = "" ]; then  
