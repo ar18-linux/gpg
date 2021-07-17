@@ -184,10 +184,8 @@ source="${1}"
 source="$(realpath "${source}")"
 target="${2}"
 target="$(realpath "${target}")"
-if [ -d "${target}" ]; then
-  echo ""
-  read -p "TARGET [${target}] EXISTS"
-  exit 1
+if [ ! -d "${target}" ]; then
+  mkdir -p "${target}"
 fi
 
 set +u
